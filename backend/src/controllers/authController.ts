@@ -6,6 +6,7 @@ import { Op } from 'sequelize';
 import { User } from '../models';
 import { createAuditLog } from '../middleware/auditLogger';
 import { AuthRequest }    from '../middleware/auth';
+import { sendEmail } from '../services/emailService';
 
 const generateTokens = (userId: number) => {
   const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -74,18 +75,32 @@ export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.json({ message: 'If the email exists, a reset link was sent.' });
+    // Always respond the same way to prevent email enumeration
+    if (!user) return res.json({ message: 'If that email exists, a reset link has been sent.' });
 
     const token = crypto.randomBytes(32).toString('hex');
     const hash  = crypto.createHash('sha256').update(token).digest('hex');
 
     await user.update({
       reset_token:        hash,
-      reset_token_expiry: new Date(Date.now() + 3_600_000),
+      reset_token_expiry: new Date(Date.now() + 3_600_000), // 1 hour
     });
 
-    // In production: send email with the raw token
-    res.json({ message: 'Reset link sent.', debug_token: token });
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
+
+    await sendEmail(
+      user.email,
+      'Password Reset Request',
+      `You requested a password reset. Click the link below to reset your password. This link expires in 1 hour.\n\n${resetUrl}\n\nIf you did not request this, ignore this email.`,
+      `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <h2 style="color:#1d4ed8">Password Reset</h2>
+        <p>You requested a password reset. Click below to set a new password. This link expires in <strong>1 hour</strong>.</p>
+        <a href="${resetUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;margin:16px 0">Reset Password</a>
+        <p style="color:#6b7280;font-size:13px">If you did not request this, you can safely ignore this email.</p>
+      </div>`
+    );
+
+    res.json({ message: 'If that email exists, a reset link has been sent.' });
   } catch {
     res.status(500).json({ message: 'Server error' });
   }

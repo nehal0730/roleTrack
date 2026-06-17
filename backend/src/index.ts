@@ -15,6 +15,8 @@ import taskRoutes         from './routes/tasks';
 import workLogRoutes      from './routes/workLogs';
 import userRoutes         from './routes/users';
 import notificationRoutes from './routes/notifications';
+import reportRoutes   from './routes/reports';
+import auditLogRoutes from './routes/auditLogs';
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.use('/api/tasks',         taskRoutes);
 app.use('/api/work-logs',     workLogRoutes);
 app.use('/api/users',         userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reports',    reportRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok', time: new Date() }));
 

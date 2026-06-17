@@ -79,6 +79,11 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
     if (priority)   where.priority   = priority;
     if (project_id) where.project_id = project_id;
     if (assigned_to && req.user!.role !== 'employee') where.assigned_to = assigned_to;
+    if (req.query.deadline_from || req.query.deadline_to) {
+      where.deadline = {};
+      if (req.query.deadline_from) where.deadline[Op.gte] = new Date(req.query.deadline_from as string);
+      if (req.query.deadline_to)   where.deadline[Op.lte] = new Date(req.query.deadline_to as string);
+    }
 
     const { count, rows } = await Task.findAndCountAll({
       where,

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
+import { body,query } from 'express-validator';
 import { getProjects, createProject, updateProject, getProjectById, deleteProject } from '../controllers/projectController';
 import { authenticate, authorize } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -7,7 +7,15 @@ import { validate } from '../middleware/validate';
 const router = Router();
 router.use(authenticate);
 
-router.get('/', getProjects);
+router.get('/', [
+    query('status').optional().isIn(['planning','active','completed','archived']),
+    query('manager_id').optional().isInt(),
+    query('from').optional().isISO8601(),
+    query('to').optional().isISO8601(),
+    query('page').optional().isInt(),
+    query('limit').optional().isInt(),
+  ],
+  validate, getProjects);
 router.get('/:id', getProjectById);
 router.post('/',
   authorize('admin'),

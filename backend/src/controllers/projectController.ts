@@ -12,6 +12,13 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
     if (req.user!.role === 'project_manager') where.manager_id = req.user!.id;
     if (status)     where.status     = status;
     if (manager_id && req.user!.role === 'admin') where.manager_id = manager_id;
+    
+    // date range filter
+    if (req.query.from || req.query.to) {
+      where.start_date = {};
+      if (req.query.from) (where.start_date as any)[Op.gte] = new Date(req.query.from as string);
+      if (req.query.to)   (where.start_date as any)[Op.lte] = new Date(req.query.to as string);
+    }
 
     const { count, rows } = await Project.findAndCountAll({
       where,

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body }   from 'express-validator';
+import { body, query }   from 'express-validator';
 import {
   getTasks,
   getTaskById,
@@ -15,7 +15,17 @@ import { validate }                from '../middleware/validate';
 const router = Router();
 router.use(authenticate);
 
-router.get('/',                   getTasks);
+router.get('/', [
+    query('status').optional().isIn(['todo','in_progress','in_review','completed','blocked']),
+    query('priority').optional().isIn(['low','medium','high','critical']),
+    query('assigned_to').optional().isInt(),
+    query('project_id').optional().isInt(),
+    query('deadline_from').optional().isISO8601(),
+    query('deadline_to').optional().isISO8601(),
+    query('page').optional().isInt(),
+    query('limit').optional().isInt(),
+  ],
+  validate,                       getTasks);
 router.get('/:id',                getTaskById);
 router.get('/:id/history',        getTaskHistory);
 router.get('/:id/assignments',    getTaskAssignments);

@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { Response } from 'express';
 import { WorkLog, LogReply, Task, User, Notification, Project } from '../models';
 import { AuthRequest }    from '../middleware/auth';
@@ -128,6 +129,70 @@ export const replyToLog = async (req: AuthRequest, res: Response) => {
     });
     res.status(201).json(replyWithAuthor);
   } catch {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getFilteredLogs = async (req: AuthRequest, res: Response) => {
+  try {
+    const { project_id, user_id, from, to, page = 1, limit = 20 } = req.query;
+    const where: any = {};
+    const taskWhere: any = {};
+
+    // Employees can only see their own logs
+    if (req.user!.role === 'employee') {
+      where.user_id = req.user!.id;
+    } else if (user_id) {
+      where.user_id = user_id;
+    }
+
+    if (project_id) taskWhere.project_id = project_id;
+
+    if (from || to) {
+      where.created_at = {};
+      if (from) where.created_at[Op.gte] = new Date(from as string);
+      if (to)   where.created_at[Op.lte] = new Date(to as string);
+    }
+
+    // PM can only see logs for their projects
+    if (req.user!.role === 'project_manager') {
+      const projects = await Project.findAll({
+        where: { manager_id: req.user!.id },
+        attributes: ['id'],
+      });
+      taskWhere.project_id = { [Op.in]: projects.map(p => p.id) };
+    }
+
+    const { count, rows } = await WorkLog.findAndCountAll({
+      where,
+      include: [
+        { model: User, as: 'author', attributes: ['id','name','email'] },
+        {
+          model: Task, as: 'task',
+          where: Object.keys(taskWhere).length ? taskWhere : undefined,
+          attributes: ['id','title','project_id'],
+          include: [{ model: Project, as: 'project', attributes: ['id','name'] }],
+        },
+        {
+          model: LogReply, as: 'replies',
+          include: [{ model: User, as: 'author', attributes: ['id','name'] }],
+          separate: true,
+          order: [['created_at', 'ASC']],
+        },
+      ],
+      order:  [['created_at', 'DESC']],
+      limit:  Number(limit),
+      offset: (Number(page) - 1) * Number(limit),
+    });
+
+    res.json({
+      logs:       rows,
+      total:      count,
+      page:       Number(page),
+      totalPages: Math.ceil(count / Number(limit)),
+    });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
