@@ -4,6 +4,7 @@ import { WorkLog, LogReply, Task, User, Notification, Project } from '../models'
 import { AuthRequest }    from '../middleware/auth';
 import { createAuditLog } from '../middleware/auditLogger';
 import { sendEmail }      from '../services/emailService';
+import { notifyUser } from '../services/socketService';
 
 export const createWorkLog = async (req: AuthRequest, res: Response) => {
   try {
@@ -97,25 +98,30 @@ export const replyToLog = async (req: AuthRequest, res: Response) => {
 
     // Notify the log author (unless they are replying to themselves)
     const logAuthorId = (log as any).user_id as number;
+    // In replyToLog, after creating the reply:
     if (logAuthorId !== req.user!.id) {
       const taskId = (log as any).task?.id;
-      try {
-        await Notification.create({
-          user_id: logAuthorId,
-          task_id: taskId ?? null,
-          type:    'reply',
-          message: `Your work log received a reply from ${req.user!.email}`,
-          sent_at: new Date(),
-        });
-      } catch { /* duplicate reply notifications are fine to skip */ }
+
+      // Reply notifications are NEVER deduplicated — every reply gets a notification
+      await Notification.create({
+        user_id: logAuthorId,
+        task_id: taskId ?? null,
+        type:    'reply',
+        message: `Your work log received a reply from ${req.user!.email}`,
+        sent_at: new Date(),
+      });
+
+      // Real-time push
+      notifyUser(logAuthorId, {
+        type:    'reply',
+        message: `Your work log received a reply from ${req.user!.email}`,
+        task_id: taskId ?? null,
+        created_at: new Date().toISOString(),
+      });
 
       const author = await User.findByPk(logAuthorId);
       if (author) {
-        await sendEmail(
-          author.email,
-          'New Reply on Your Work Log',
-          `Your work log received a reply: "${message}"`
-        );
+        await sendEmail(author.email, 'New Reply on Your Work Log', `Your work log received a reply: "${message}"`);
       }
     }
 

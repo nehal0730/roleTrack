@@ -1,12 +1,13 @@
-import cron from 'node-cron';
-import { Op }   from 'sequelize';
+import cron   from 'node-cron';
+import { Op } from 'sequelize';
 import { Task, User, Notification, Project } from '../models';
-import { NotificationType } from '../models/Notification';
-import { sendEmail } from './emailService';
+import { NotificationType }  from '../models/Notification';
+import { sendEmail }         from './emailService';
+import { notifyUser }        from './socketService';
 
 interface DeadlineInterval {
   hours: number;
-  type: NotificationType;
+  type:  NotificationType;
 }
 
 const INTERVALS: DeadlineInterval[] = [
@@ -16,6 +17,14 @@ const INTERVALS: DeadlineInterval[] = [
   { hours: 1,  type: 'deadline_1h'  },
 ];
 
+/**
+ * Attempts to insert a notification row.
+ * Returns true if inserted, false if the unique constraint fired (already sent).
+ */
+const DEDUP_TYPES: NotificationType[] = [
+  'deadline_48h','deadline_24h','deadline_12h','deadline_1h','overdue',
+];
+
 const safeCreateNotification = async (
   user_id: number,
   task_id: number,
@@ -23,25 +32,43 @@ const safeCreateNotification = async (
   message: string
 ): Promise<boolean> => {
   try {
-    await Notification.create({ user_id, task_id, type, message, sent_at: new Date() });
+    // For deadline/overdue types — only one ever per task per type
+    if (DEDUP_TYPES.includes(type)) {
+      const exists = await Notification.findOne({ where: { task_id, type } });
+      if (exists) return false;
+    }
+
+    const notif = await Notification.create({
+      user_id, task_id, type, message, sent_at: new Date(),
+    });
+
+    notifyUser(user_id, {
+      type,
+      message,
+      task_id,
+      created_at: notif.created_at?.toISOString(),
+    });
     return true;
   } catch (err: any) {
-    // Unique constraint violation = already sent; skip silently
-    if (err.name === 'SequelizeUniqueConstraintError') return false;
-    throw err;
+    console.error('Notification error:', err);
+    return false;
   }
 };
 
+// ── Deadline reminders ────────────────────────────────────────────────────────
 const checkDeadlines = async () => {
   const now = new Date();
 
   for (const { hours, type } of INTERVALS) {
     const target = new Date(now.getTime() + hours * 3_600_000);
-    const window = 5 * 60_000; // ±5 min window
+    const window = 5 * 60_000; // ±5-minute window
 
     const tasks = await Task.findAll({
       where: {
-        deadline:    { [Op.between]: [new Date(target.getTime() - window), new Date(target.getTime() + window)] },
+        deadline:    { [Op.between]: [
+          new Date(target.getTime() - window),
+          new Date(target.getTime() + window),
+        ]},
         status:      { [Op.notIn]: ['completed'] },
         assigned_to: { [Op.ne]: null },
       },
@@ -55,15 +82,15 @@ const checkDeadlines = async () => {
     for (const task of tasks) {
       const assignee = (task as any).assignee as User;
       const manager  = (task as any).project?.manager as User | undefined;
-
       if (!assignee) continue;
 
-      const msg = `Reminder: Task "${task.title}" is due in ${hours} hour(s).`;
+      const msg     = `Reminder: Task "${task.title}" is due in ${hours} hour(s).`;
       const created = await safeCreateNotification(assignee.id, task.id, type, msg);
 
       if (created) {
         await sendEmail(assignee.email, `Task Due in ${hours}h`, msg);
-        // Also alert the manager for short windows (≤24h)
+
+        // Alert the manager for short windows (≤24 h)
         if (manager && hours <= 24) {
           await sendEmail(
             manager.email,
@@ -76,6 +103,7 @@ const checkDeadlines = async () => {
   }
 };
 
+// ── Overdue alerts ────────────────────────────────────────────────────────────
 const checkOverdue = async () => {
   const now = new Date();
 
@@ -95,10 +123,9 @@ const checkOverdue = async () => {
   for (const task of tasks) {
     const assignee = (task as any).assignee as User;
     const manager  = (task as any).project?.manager as User | undefined;
-
     if (!assignee) continue;
 
-    const msg = `OVERDUE: Task "${task.title}" has passed its deadline.`;
+    const msg     = `OVERDUE: Task "${task.title}" has passed its deadline.`;
     const created = await safeCreateNotification(assignee.id, task.id, 'overdue', msg);
 
     if (created) {
@@ -114,8 +141,9 @@ const checkOverdue = async () => {
   }
 };
 
+// ── Start both cron jobs ──────────────────────────────────────────────────────
 export const startScheduler = () => {
   cron.schedule('*/5 * * * *',  checkDeadlines, { name: 'deadline-checker' });
   cron.schedule('*/10 * * * *', checkOverdue,   { name: 'overdue-checker'  });
-  console.log('Scheduler started — deadline checks every 5 min, overdue checks every 10 min');
+  console.log('Scheduler started — deadlines every 5 min, overdue every 10 min');
 };

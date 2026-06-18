@@ -12,6 +12,9 @@ import ReportsPage           from './pages/ReportsPage';
 import ActivityLogPage       from './pages/ActivityLogPage';
 import Layout                from './components/Layout';
 import ProtectedRoute        from './components/ProtectedRoute';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage  from './pages/ResetPasswordPage';
+import KanbanPage from './pages/KanbanPage';
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } });
 
@@ -22,6 +25,9 @@ export default function App() {
         <Toaster position="top-right" toastOptions={{ className: 'text-sm' }} />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password"  element={<ResetPasswordPage />} />
+          
           <Route path="/*" element={
             <ProtectedRoute>
               <Layout>
@@ -43,6 +49,7 @@ export default function App() {
                     <ProtectedRoute roles={['admin']}><ActivityLogPage /></ProtectedRoute>
                   } />
                   <Route path="*"              element={<Navigate to="/dashboard" />} />
+                  <Route path="/kanban" element={<KanbanPage />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>

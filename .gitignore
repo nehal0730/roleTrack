@@ -24,3 +24,13 @@ yarn-error.log*
 Thumbs.db
 
 .cache/
+backend/npm-cache/
+frontend/npm-cache/
+npm-cache/
+
+backend/npm-cache/_cacache/
+
+backend/coverage/
+
+frontend/.env.docker
+**/.docker/

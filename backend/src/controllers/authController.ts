@@ -3,10 +3,10 @@ import bcrypt from 'bcryptjs';
 import jwt    from 'jsonwebtoken';
 import crypto from 'crypto';
 import { Op } from 'sequelize';
-import { User } from '../models';
-import { createAuditLog } from '../middleware/auditLogger';
-import { AuthRequest }    from '../middleware/auth';
-import { sendEmail } from '../services/emailService';
+import { User }               from '../models';
+import { createAuditLog }     from '../middleware/auditLogger';
+import { AuthRequest }        from '../middleware/auth';
+import { sendEmail }          from '../services/emailService';
 
 const generateTokens = (userId: number) => {
   const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -52,7 +52,7 @@ export const refreshToken = async (req: Request, res: Response) => {
     if (!token) return res.status(401).json({ message: 'No refresh token provided' });
 
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as { id: number };
-    const user = await User.findOne({ where: { id: decoded.id, is_active: true } });
+    const user    = await User.findOne({ where: { id: decoded.id, is_active: true } });
     if (!user) return res.status(401).json({ message: 'User not found or inactive' });
 
     const { accessToken, refreshToken: newRefresh } = generateTokens(user.id);
@@ -75,7 +75,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ where: { email } });
-    // Always respond the same way to prevent email enumeration
+
+    // Always same response — prevents email enumeration
     if (!user) return res.json({ message: 'If that email exists, a reset link has been sent.' });
 
     const token = crypto.randomBytes(32).toString('hex');
@@ -90,18 +91,27 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     await sendEmail(
       user.email,
-      'Password Reset Request',
-      `You requested a password reset. Click the link below to reset your password. This link expires in 1 hour.\n\n${resetUrl}\n\nIf you did not request this, ignore this email.`,
-      `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
-        <h2 style="color:#1d4ed8">Password Reset</h2>
-        <p>You requested a password reset. Click below to set a new password. This link expires in <strong>1 hour</strong>.</p>
-        <a href="${resetUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;margin:16px 0">Reset Password</a>
-        <p style="color:#6b7280;font-size:13px">If you did not request this, you can safely ignore this email.</p>
+      'Password Reset Request — Task Manager',
+      `You requested a password reset. Visit this link to set a new password (expires in 1 hour):\n\n${resetUrl}\n\nIf you did not request this, ignore this email.`,
+      `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <h2 style="color:#1d4ed8;margin-bottom:8px">Password Reset</h2>
+        <p style="color:#374151">You requested a password reset for your Task Manager account.</p>
+        <p style="color:#374151">Click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>
+        <div style="margin:24px 0">
+          <a href="${resetUrl}"
+            style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">
+            Reset Password
+          </a>
+        </div>
+        <p style="color:#9ca3af;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/>
+        <p style="color:#9ca3af;font-size:12px">Task Manager · ${resetUrl}</p>
       </div>`
     );
 
     res.json({ message: 'If that email exists, a reset link has been sent.' });
-  } catch {
+  } catch (err) {
+    console.error('forgotPassword error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -125,6 +135,7 @@ export const resetPassword = async (req: Request, res: Response) => {
       reset_token:        null,
       reset_token_expiry: null,
     });
+
     res.json({ message: 'Password reset successfully' });
   } catch {
     res.status(500).json({ message: 'Server error' });
@@ -135,7 +146,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findByPk(req.user!.id, {
       attributes: ['id','name','email','role_id','created_at'],
-      include: [{ association: 'role', attributes: ['name'] }],
+      include:    [{ association: 'role', attributes: ['name'] }],
     });
     res.json(user);
   } catch {

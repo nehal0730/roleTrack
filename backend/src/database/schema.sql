@@ -137,11 +137,11 @@ CREATE TABLE notifications (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL,
-  INDEX idx_notif_user_id    (user_id),
-  INDEX idx_notif_task_id    (task_id),
-  INDEX idx_notif_type       (type),
-  INDEX idx_notif_is_read    (is_read),
-  UNIQUE KEY uq_notif_task_type (task_id, type)
+  INDEX idx_notif_user_id (user_id),
+  INDEX idx_notif_task_id (task_id),
+  INDEX idx_notif_type    (type),
+  INDEX idx_notif_is_read (is_read),
+  INDEX idx_notif_task_type (task_id, type)
 );
 
 CREATE TABLE audit_logs (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 import { LogIn, Info } from 'lucide-react';
@@ -41,15 +41,15 @@ export default function LoginPage() {
         </div>
 
         {/* Info box */}
-        <div className="flex gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3">
+        {/* <div className="flex gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3">
           <Info size={16} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
             There is no public signup. The <strong>Admin</strong> creates all Project Manager and Employee accounts from the Users page after logging in.
           </p>
-        </div>
+        </div> */}
 
         {/* Role cards */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           {DEMO_CREDENTIALS.map(({ role, email: e, password: p, color }) => (
             <div
               key={role}
@@ -65,7 +65,7 @@ export default function LoginPage() {
               <div className="mt-1 text-xs opacity-80 font-mono">{e}</div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* Login form */}
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 space-y-4 border border-gray-100 dark:border-gray-700">
@@ -90,10 +90,18 @@ export default function LoginPage() {
               required
             />
           </div>
+          <div className="text-right">
+            <Link
+              to="/forgot-password"
+              className="text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-lg font-medium text-sm transition"
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-lg font-medium text-sm transition cursor-pointer"
           >
             <LogIn size={16} />
             {loading ? 'Signing in...' : 'Sign in'}

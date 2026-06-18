@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+npm-cache
+npm-cache/_cacache
 
 # Editor directories and files
 .vscode/*

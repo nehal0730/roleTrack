@@ -8,11 +8,13 @@ import { AuthRequest }      from '../middleware/auth';
 import { createAuditLog }   from '../middleware/auditLogger';
 import { sendEmail }        from '../services/emailService';
 import { NotificationType } from '../models/Notification';
+import { notifyUser } from '../services/socketService';
 
 // ── Single source of truth per concern ───────────────────────────────────────
 // task_assignments  → owns ALL assignment events (who, by whom, when, until when)
 // task_history      → owns all OTHER field mutations (status, priority, deadline, title)
 // tasks.assigned_to → live current value only
+
 const TRACKED_FIELDS = ['status', 'priority', 'deadline', 'title'] as const;
 // assigned_to is intentionally excluded — task_assignments is its authoritative log
 
@@ -44,6 +46,10 @@ const recordHistory = async (
   if (entries.length) await TaskHistory.bulkCreate(entries);
 };
 
+const DEDUP_TYPES: NotificationType[] = [
+  'deadline_48h','deadline_24h','deadline_12h','deadline_1h','overdue',
+];
+
 const safeCreateNotification = async (
   user_id: number,
   task_id: number,
@@ -51,11 +57,26 @@ const safeCreateNotification = async (
   message: string
 ): Promise<boolean> => {
   try {
-    await Notification.create({ user_id, task_id, type, message, sent_at: new Date() });
+    // For deadline/overdue types — only one ever per task per type
+    if (DEDUP_TYPES.includes(type)) {
+      const exists = await Notification.findOne({ where: { task_id, type } });
+      if (exists) return false;
+    }
+
+    const notif = await Notification.create({
+      user_id, task_id, type, message, sent_at: new Date(),
+    });
+
+    notifyUser(user_id, {
+      type,
+      message,
+      task_id,
+      created_at: notif.created_at?.toISOString(),
+    });
     return true;
   } catch (err: any) {
-    if (err.name === 'SequelizeUniqueConstraintError') return false;
-    throw err;
+    console.error('Notification error:', err);
+    return false;
   }
 };
 
@@ -89,6 +110,7 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
       where,
       include: [
         { model: User,    as: 'assignee', attributes: ['id','name','email'] },
+        { model: User,    as: 'taskCreator', attributes: ['id','name'] },
         { model: Project, as: 'project',  attributes: ['id','name'] },
       ],
       limit:  Number(limit),

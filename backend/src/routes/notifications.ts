@@ -1,4 +1,5 @@
-import { Router }   from 'express';
+import { Router }       from 'express';
+import { Op }           from 'sequelize';
 import { Notification } from '../models';
 import { authenticate } from '../middleware/auth';
 import { AuthRequest }  from '../middleware/auth';
@@ -26,6 +27,8 @@ router.get('/unread-count', async (req: AuthRequest, res) => {
   } catch { res.status(500).json({ message: 'Server error' }); }
 });
 
+// CRITICAL: /read-all MUST be before /:id/read
+// otherwise Express matches 'read-all' as the :id parameter
 router.put('/read-all', async (req: AuthRequest, res) => {
   try {
     await Notification.update(

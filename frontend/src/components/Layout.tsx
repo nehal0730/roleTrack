@@ -1,6 +1,12 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState }   from 'react';
+import LogoutModal     from './LogoutModal';
 import { useAuthStore } from '../store/authStore';
 import { useQuery } from '@tanstack/react-query';
+import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
+import { Moon, Sun, LayoutGrid  } from 'lucide-react';
+import { useThemeStore } from '../store/themeStore';
+
 import api from '../lib/api';
 import {
   LayoutDashboard, FolderKanban, CheckSquare,
@@ -18,6 +24,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 const ALL_NAV = [
+  { to: '/kanban', icon: LayoutGrid, label: 'Kanban', roles: ['admin','project_manager','employee'] },
   { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard',    roles: ['admin','project_manager','employee'] },
   { to: '/projects',     icon: FolderKanban,   label: 'Projects',     roles: ['admin','project_manager'] },
   { to: '/tasks',        icon: CheckSquare,    label: 'Tasks',        roles: ['admin','project_manager','employee'] },
@@ -29,6 +36,11 @@ const ALL_NAV = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, role, logout } = useAuthStore();
+
+  useRealtimeNotifications();
+
+  const { dark, toggle } = useThemeStore();
+
   const navigate  = useNavigate();
   const location  = useLocation();
   const userRole  = role()!;
@@ -39,12 +51,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     refetchInterval: 30000,
   });
 
+  const [showLogout, setShowLogout] = useState(false);
   const navItems = ALL_NAV.filter(item => item.roles.includes(userRole));
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+  // const handleLogout = async () => {
+  //   await logout();
+  //   navigate('/login');
+  // };
 
   const getInitials = (name: string) =>
     name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || 'U';
@@ -102,6 +115,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Bottom actions */}
         <div className="p-3 border-t border-gray-100 dark:border-gray-700 space-y-0.5">
+          <button
+            onClick={toggle}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all w-full cursor-pointer"
+          >
+            {dark ? <Sun size={17} /> : <Moon size={17} />}
+            <span>{dark ? 'Light mode' : 'Dark mode'}</span>
+          </button>
           <Link
             to="/notifications"
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
@@ -118,8 +138,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </span>
             )}
           </Link>
+          {showLogout && (
+            <LogoutModal
+              onConfirm={async () => { await logout(); navigate('/login'); }}
+              onCancel={() => setShowLogout(false)}
+            />
+          )}
           <button
-            onClick={handleLogout}
+            onClick={() => setShowLogout(true)}   // was: handleLogout
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all w-full cursor-pointer"
           >
             <LogOut size={17} />
