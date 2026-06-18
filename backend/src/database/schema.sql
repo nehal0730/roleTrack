@@ -160,8 +160,35 @@ CREATE TABLE audit_logs (
   INDEX idx_al_created_at  (created_at)
 );
 
-INSERT INTO roles (name) VALUES ('admin'),('project_manager'),('employee');
+INSERT INTO roles (id, name) VALUES (1, 'admin'), (2, 'project_manager'), (3, 'employee');
 
-INSERT INTO users (name, email, password_hash, role_id)
-VALUES ('Super Admin','admin@taskmanager.com',
-'$2b$12$/yIkUby6v/B/YzVnp0ftOup5/0dVt9IoglTauVI0A8VrwjodxP1fy', 1);
+INSERT INTO users (id, name, email, password_hash, role_id) VALUES
+(1, 'Super Admin', 'admin@taskmanager.com', '$2b$12$/yIkUby6v/B/YzVnp0ftOup5/0dVt9IoglTauVI0A8VrwjodxP1fy', 1),
+(2, 'Jane PM', 'pm@taskmanager.com', '$2b$12$1iu/N8QhDVrTQPeeomKzUudIs5TMtc.m08iKi8MmBC0AJLkS6nOwC', 2),
+(3, 'John Dev', 'employee@taskmanager.com', '$2b$12$gT0ATMDFRkIRLcw7JFUatuYquOIJxQtF0pnWu.bUvJxZGuwhtedj.', 3);
+
+INSERT INTO projects (id, name, description, start_date, end_date, status, manager_id, created_by) VALUES
+(1, 'AquaGuard', 'Water purification control system development.', '2026-06-01', '2026-08-31', 'active', 2, 1);
+
+INSERT INTO tasks (id, project_id, title, description, priority, status, deadline, assigned_to, created_by, estimated_hours) VALUES
+(1, 1, 'Design database schema', 'Draft the relational tables and keys.', 'high', 'completed', '2026-06-15 17:00:00', 3, 2, 12),
+(2, 1, 'Implement backend controllers', 'Create Express routers and logic.', 'medium', 'in_progress', '2026-06-30 17:00:00', 3, 2, 24),
+(3, 1, 'Write unit tests', 'Add Jest tests for auth and task features.', 'low', 'todo', '2026-07-15 17:00:00', 3, 2, 8),
+(4, 1, 'Update changes in UI', 'Refactor style selectors and variables.', 'critical', 'in_progress', '2026-06-17 12:00:00', 3, 2, 4);
+
+INSERT INTO task_assignments (task_id, assigned_to, assigned_by, assigned_at, notes) VALUES
+(1, 3, 2, '2026-06-02 09:00:00', 'Assigned database layout to John.'),
+(2, 3, 2, '2026-06-03 10:00:00', 'Assigned controllers layer implementation.'),
+(3, 3, 2, '2026-06-04 11:00:00', 'Assigned test coverage task.'),
+(4, 3, 2, '2026-06-05 12:00:00', 'Assigned critical UI fixes.');
+
+INSERT INTO work_logs (id, task_id, user_id, description, hours_worked) VALUES
+(1, 1, 3, 'Completed database tables setup and indices.', 10.5);
+
+INSERT INTO log_replies (log_id, user_id, message) VALUES
+(1, 2, 'Great job! Sourced and tested successfully.');
+
+INSERT INTO audit_logs (user_id, action, entity_type, entity_id, previous_value, new_value, ip_address, created_at) VALUES
+(1, 'CREATE_USER', 'user', 2, NULL, '{"name": "Jane PM", "email": "pm@taskmanager.com", "role_id": 2}', '127.0.0.1', '2026-06-01 09:00:00'),
+(1, 'CREATE_USER', 'user', 3, NULL, '{"name": "John Dev", "email": "employee@taskmanager.com", "role_id": 3}', '127.0.0.1', '2026-06-01 09:15:00'),
+(1, 'CREATE_PROJECT', 'project', 1, NULL, '{"name": "AquaGuard", "manager_id": 2}', '127.0.0.1', '2026-06-01 10:00:00');
