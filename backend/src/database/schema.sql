@@ -163,9 +163,9 @@ CREATE TABLE audit_logs (
 INSERT INTO roles (id, name) VALUES (1, 'admin'), (2, 'project_manager'), (3, 'employee');
 
 INSERT INTO users (id, name, email, password_hash, role_id) VALUES
-(1, 'Super Admin', 'admin@taskmanager.com', '$2b$12$/yIkUby6v/B/YzVnp0ftOup5/0dVt9IoglTauVI0A8VrwjodxP1fy', 1),
-(2, 'Jane PM', 'pm@taskmanager.com', '$2b$12$1iu/N8QhDVrTQPeeomKzUudIs5TMtc.m08iKi8MmBC0AJLkS6nOwC', 2),
-(3, 'John Dev', 'employee@taskmanager.com', '$2b$12$gT0ATMDFRkIRLcw7JFUatuYquOIJxQtF0pnWu.bUvJxZGuwhtedj.', 3);
+(1, 'Super Admin', 'admin@taskmanager.com', '$2b$12$/yIkUby6v/B/YzVnp0ftOup5/0dVt9IoglTauVI0A8VrwjodxP1fy', 1), --Admin@123
+(2, 'Jane PM', 'pm@taskmanager.com', '$2b$12$LIi5maErh4N/r2eVdNAG7uFs/zyBclumECBdjyRSLCETIQq3udUuu', 2), --PM@123
+(3, 'John Dev', 'employee@taskmanager.com', '$2b$12$x5xOQM5B/H4z5FyMajEIBuakL4edVkvYiBL186yt9WbvR2bvPujqK', 3); --Employee@123
 
 INSERT INTO projects (id, name, description, start_date, end_date, status, manager_id, created_by) VALUES
 (1, 'AquaGuard', 'Water purification control system development.', '2026-06-01', '2026-08-31', 'active', 2, 1);

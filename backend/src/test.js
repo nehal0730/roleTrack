@@ -1,0 +1,1 @@
+node -e "const b=require('bcryptjs'); Promise.all([b.hash('Admin@123',12), b.hash('PM@123',12), b.hash('Employee@123',12)]).then(console.log)"
