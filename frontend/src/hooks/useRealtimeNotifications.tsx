@@ -23,7 +23,7 @@ export const useRealtimeNotifications = () => {
       const isUrgent = ['overdue','deadline_1h','assignment'].includes(payload.type);
       if (isUrgent) {
         toast(payload.message, {
-          icon: '🔔',
+          icon: <Bell size={16} />,
           duration: 6000,
           style: { fontSize: '13px', maxWidth: '360px' },
         });

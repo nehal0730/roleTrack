@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
-import { Plus, Archive, Eye, Pencil, X, ChevronDown, Search } from 'lucide-react';
+import { Plus, Archive, Eye, Pencil, X, Search } from 'lucide-react';
 
 const STATUS_STYLE: Record<string, string> = {
   planning:  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',

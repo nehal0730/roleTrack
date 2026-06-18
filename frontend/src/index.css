@@ -9,6 +9,16 @@
   --color-primary-700: #1d4ed8;
 }
 
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased transition-colors duration-200;
+  }
+  .dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+}
+
+
 @layer utilities {
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out forwards;

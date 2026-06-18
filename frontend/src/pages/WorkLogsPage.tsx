@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
-import { Search, Paperclip, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { Paperclip, Send, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function WorkLogsPage() {
   const { role } = useAuthStore();
-  const qc = useQueryClient();
+  // const qc = useQueryClient();
   const [projectFilter, setProject] = useState('');
   const [employeeFilter, setEmployee] = useState('');
   const [fromDate, setFrom] = useState('');

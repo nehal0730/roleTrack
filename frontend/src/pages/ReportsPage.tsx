@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
-import { BarChart3, Users, FolderKanban, TrendingUp, Clock } from 'lucide-react';
+import { BarChart3, Users, FolderKanban, TrendingUp } from 'lucide-react';
 
-function StatCard({ label, value, sub, color = 'blue' }: { label: string; value: number | string; sub?: string; color?: string }) {
+function StatCard({ label, value, sub }: { label: string; value: number | string; sub?: string; color?: string }) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-sm transition-shadow">
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{label}</p>
@@ -85,7 +85,7 @@ function AdminOverview() {
 }
 
 function ProjectReport() {
-  const { role } = useAuthStore();
+  // const { role } = useAuthStore();
   const { data: projects } = useQuery({ queryKey: ['projects'], queryFn: () => api.get('/projects').then(r => r.data) });
   const [projectId, setProjectId] = useState('');
 

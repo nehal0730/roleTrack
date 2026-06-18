@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
-import { LogIn, Info } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 
-const DEMO_CREDENTIALS = [
-  { role: 'Admin',           email: 'admin@taskmanager.com', password: 'Admin@123',   color: 'bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-900/20 dark:border-purple-700 dark:text-purple-300' },
-  { role: 'Project Manager', email: '(created by admin)',     password: '(set by admin)', color: 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300' },
-  { role: 'Employee',        email: '(created by admin)',     password: '(set by admin)', color: 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300' },
-];
+// const DEMO_CREDENTIALS = [
+//   { role: 'Admin',           email: 'admin@taskmanager.com', password: 'Admin@123',   color: 'bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-900/20 dark:border-purple-700 dark:text-purple-300' },
+//   { role: 'Project Manager', email: '(created by admin)',     password: '(set by admin)', color: 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300' },
+//   { role: 'Employee',        email: '(created by admin)',     password: '(set by admin)', color: 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300' },
+// ];
 
 export default function LoginPage() {
   const [email, setEmail]       = useState('admin@taskmanager.com');

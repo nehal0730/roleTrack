@@ -32,5 +32,5 @@ backend/npm-cache/_cacache/
 
 backend/coverage/
 
-frontend/.env.docker
+.env.docker
 **/.docker/

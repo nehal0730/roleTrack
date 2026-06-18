@@ -63,7 +63,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) || 'U';
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden">
       <aside className="w-64 bg-white dark:bg-gray-800 flex flex-col border-r border-gray-100 dark:border-gray-700 shrink-0">
 
         {/* Brand */}
